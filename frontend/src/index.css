@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme {
+  --color-yt-bg: #0f0f0f;
+  --color-yt-card: #181818;
+  --color-yt-hover: #272727;
+  --color-yt-border: #3f3f3f;
+  --color-yt-accent: #ae7aff;
+  --color-yt-text: #ffffff;
+}
+
+body {
+  background-color: var(--color-yt-bg);
+  color: var(--color-yt-text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  margin: 0;
+}
