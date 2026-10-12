@@ -100,7 +100,6 @@ export default function ChannelProfile() {
 
   const handleSubscribeToggle = async () => {
     if (!isLoggedIn) {
-      alert("Please Login first!");
       navigate("/login");
       return;
     }

@@ -81,7 +81,6 @@ export default function WatchVideo() {
   // Toggle Subscription Handler
   const handleToggleSubscription = async () => {
     if (!currentUser) {
-      alert("Please log in first.");
       navigate("/login");
       return;
     }
@@ -106,7 +105,6 @@ export default function WatchVideo() {
   // Toggle Video Like Handler
   const handleToggleVideoLike = async () => {
     if (!currentUser) {
-      alert("Please log in first to like.");
       navigate("/login");
       return;
     }
@@ -126,7 +124,6 @@ export default function WatchVideo() {
   // Save to Playlist Handler
   const handleSaveToPlaylist = () => {
     if (!currentUser) {
-      alert("Please login first to save video in playlist.");
       navigate("/login");
       return;
     }
