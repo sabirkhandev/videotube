@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import api from "../api/axios";
 import { getUserTweetsApi, deleteTweetApi } from "../api/tweet.api";
 import { toggleSubscriptionApi } from "../api/subscription.api";
+import { toggleTweetLikeApi } from "../api/like.api";
 import { getUserPlaylistsApi } from "../api/playlist.api";
 
 export default function ChannelProfile() {
@@ -97,6 +98,39 @@ export default function ChannelProfile() {
 
     fetchChannelTweets();
   }, [activeTab, channel?._id]);
+
+  const handleToggleTweetLike = async (tweetId) => {
+  if (!isLoggedIn){
+    navigate("/login");
+    return ;
+  }
+    
+
+  try {
+    const res = await toggleTweetLikeApi(tweetId);
+    const isLiked = res.data?.isLiked;
+
+    setTweets((prevTweets) =>
+      prevTweets.map((tweet) => {
+        if (tweet._id === tweetId) {
+          const currentLikes = tweet.likesCount || 0;
+          return {
+            ...tweet,
+            isLiked: isLiked,
+            likesCount: isLiked
+              ? currentLikes + 1
+              : Math.max(0, currentLikes - 1),
+          };
+        }
+        return tweet;
+      })
+    );
+  } catch (err) {
+    alert(
+      err.response?.data?.message || "Could not like the tweet."
+    );
+  }
+};
 
   const handleSubscribeToggle = async () => {
     if (!isLoggedIn) {
@@ -229,7 +263,7 @@ export default function ChannelProfile() {
           </button>
         </div>
 
-        {/* 1. Videos Tab */}
+        {/* Videos Tab */}
         {activeTab === "videos" && (
           <div className="pt-4">
             {videos.length === 0 ? (
@@ -295,68 +329,84 @@ export default function ChannelProfile() {
           </div>
         )}
 
-        {/* 2. Tweets Tab Content */}
+        {/* Tweets Tab Content */}
         {activeTab === "tweets" && (
-          <div className="pt-4 max-w-2xl mx-auto space-y-4">
-            {tweetsLoading ? (
-              <p className="text-center text-purple-400 py-8 animate-pulse text-sm">
-                Tweets are loading...
-              </p>
-            ) : tweets.length === 0 ? (
-              <div className="p-10 text-center text-gray-400 bg-zinc-900/50 border border-zinc-800 rounded-xl">
-                This user has not posted any tweets yet.
-              </div>
-            ) : (
-              tweets.map((tweet) => (
-                <div
-                  key={tweet._id}
-                  className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={
-                          channel.avatar?.replace("http://", "https://") ||
-                          "https://via.placeholder.com/150"
-                        }
-                        alt={channel.username}
-                        className="w-9 h-9 rounded-full object-cover border border-zinc-700 shrink-0"
-                      />
-                      <div>
-                        <h4 className="text-sm font-semibold text-white">
-                          {channel.fullname || channel.username}
-                        </h4>
-                        <p className="text-xs text-gray-400">
-                          @{channel.username} •{" "}
-                          {new Date(tweet.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
+  <div className="pt-4 max-w-2xl mx-auto space-y-4">
+    {tweetsLoading ? (
+      <p className="text-center text-purple-400 py-8 animate-pulse text-sm">
+        Tweets are loading...
+      </p>
+    ) : tweets.length === 0 ? (
+      <div className="p-10 text-center text-gray-400 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+        This user has not posted any tweets yet.
+      </div>
+    ) : (
+      tweets.map((tweet) => {
+        const isOwner = currentUser?._id === tweet.owner?._id || currentUser?._id === channel?._id;
 
-                    {/* Owner Delete Button */}
-                    {isOwner && (
-                      <button
-                        onClick={() => handleDeleteTweet(tweet._id)}
-                        className="text-xs text-gray-400 hover:text-red-400 transition cursor-pointer"
-                      >
-                        🗑️ Delete
-                      </button>
-                    )}
-                  </div>
-
-                  <p className="text-sm text-gray-200 whitespace-pre-line">
-                    {tweet.content}
+        return (
+          <div
+            key={tweet._id}
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img
+                  src={
+                    channel.avatar?.replace("http://", "https://") ||
+                    "https://via.placeholder.com/150"
+                  }
+                  alt={channel.username}
+                  className="w-9 h-9 rounded-full object-cover border border-zinc-700 shrink-0"
+                />
+                <div>
+                  <h4 className="text-sm font-semibold text-white">
+                    {channel.fullname || channel.username}
+                  </h4>
+                  <p className="text-xs text-gray-400">
+                    @{channel.username} •{" "}
+                    {new Date(tweet.createdAt).toLocaleDateString()}
                   </p>
-
-                  <div className="flex items-center gap-2 pt-2 border-t border-zinc-800/60 text-xs text-gray-400">
-                    <span>❤️ {tweet.likesCount || 0} Likes</span>
-                  </div>
                 </div>
-              ))
-            )}
+              </div>
+
+              {/* Owner Delete Button */}
+              {isOwner && (
+                <button
+                  onClick={() => handleDeleteTweet(tweet._id)}
+                  className="text-xs text-gray-400 hover:text-red-400 transition cursor-pointer"
+                >
+                  🗑️ Delete
+                </button>
+              )}
+            </div>
+
+            <p className="text-sm text-gray-200 whitespace-pre-line">
+              {tweet.content}
+            </p>
+
+            {/* Interactive Like Button for Logged-in Users */}
+            <div className="flex items-center gap-4 pt-2 border-t border-zinc-800/60 text-xs">
+              <button
+                onClick={() => handleToggleTweetLike(tweet._id)}
+                className={`flex items-center gap-1.5 transition cursor-pointer font-medium ${
+                  tweet.isLiked
+                    ? "text-red-500 font-bold"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <span>{tweet.isLiked ? "❤️" : "🤍"}</span>
+                <span>{tweet.likesCount || 0} Likes</span>
+              </button>
+            </div>
           </div>
+        );
+      })
+    )}
+  </div>
         )}
 
+        {/* Playlist Tab */}
         {activeTab === "playlists" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 pt-4">
             {playlists.length === 0 ? (
