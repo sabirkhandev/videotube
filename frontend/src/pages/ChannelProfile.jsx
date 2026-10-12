@@ -25,6 +25,8 @@ export default function ChannelProfile() {
   const [tweetsLoading, setTweetsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const currentUser = useSelector((state) => state.auth?.userData);
+
   const { userData, status: isLoggedIn } = useSelector((state) => state.auth);
 
   const isOwner = isLoggedIn && userData?._id === channel?._id;
@@ -105,7 +107,6 @@ export default function ChannelProfile() {
     return ;
   }
     
-
   try {
     const res = await toggleTweetLikeApi(tweetId);
     const isLiked = res.data?.isLiked;
